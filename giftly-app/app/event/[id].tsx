@@ -6,6 +6,7 @@ import { Colors } from '@/constants/colors';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { getListsByEvent, createInvitation } from '@/services/list-service';
 import { AdBanner } from '@/components/AdBanner';
+import { useEventSocket } from '@/hooks/useEventSocket';
 import type { WishList } from '@/types';
 
 export default function EventDetailScreen() {
@@ -13,6 +14,12 @@ export default function EventDetailScreen() {
   const { user } = useAuthStore();
   const [lists, setLists] = useState<WishList[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Nouveau participant en temps réel → rechargement des listes
+  useEventSocket({
+    eventId: Number(id),
+    onParticipantJoined: () => loadLists(),
+  });
 
   const loadLists = useCallback(async () => {
     setIsLoading(true);
