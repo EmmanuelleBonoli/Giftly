@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, KeyboardAvoidingView, Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -80,8 +80,7 @@ export default function WishListScreen() {
     }
   }, [id]);
 
-  // Pas de useFocusEffect ici — on charge une fois au mount
-  useState(() => { loadItems(); });
+  useEffect(() => { loadItems(); }, [loadItems]);
 
   async function handleReserve(itemId: number): Promise<void> {
     try {
