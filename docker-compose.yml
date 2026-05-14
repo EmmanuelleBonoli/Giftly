@@ -1,4 +1,6 @@
 services:
+
+  # ─── Base de données ──────────────────────────────────────────────────────────
   mysql:
     image: mysql:8.2
     container_name: giftly-mysql
@@ -17,6 +19,35 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # ─── Backend Spring Boot ──────────────────────────────────────────────────────
+  backend:
+    build: ./giftly-api
+    container_name: giftly-backend
+    restart: unless-stopped
+    env_file: ./giftly-api/.env
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # ─── Frontend Expo (Metro bundler) ───────────────────────────────────────────
+  # Le bundler tourne dans Docker, mais l'app s'exécute sur l'émulateur/device.
+  # Les URLs EXPO_PUBLIC_* dans giftly-app/.env doivent pointer vers la machine hôte :
+  #   - Émulateur Android : 10.0.2.2 (déjà configuré par défaut)
+  #   - Vrai device physique : remplace par ton IP locale (ex: 192.168.1.42)
+  frontend:
+    build: ./giftly-app
+    container_name: giftly-frontend
+    restart: unless-stopped
+    env_file: ./giftly-app/.env
+    ports:
+      - "8081:8081"
+      - "19000:19000"
+      - "19001:19001"
+    depends_on:
+      - backend
 
 volumes:
   giftly_mysql_data:
