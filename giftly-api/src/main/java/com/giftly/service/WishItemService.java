@@ -4,6 +4,11 @@ import com.giftly.dto.item.CreateWishItemRequest;
 import com.giftly.dto.item.WishItemResponse;
 import com.giftly.model.*;
 import com.giftly.repository.*;
+import com.giftly.websocket.NotificationService;
+import com.giftly.websocket.dto.WsEventBroadcast;
+import com.giftly.websocket.dto.WsEventBroadcast.WsEventType;
+import com.giftly.websocket.dto.WsReservationNotification;
+import com.giftly.websocket.dto.WsReservationNotification.WsReservationType;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,6 +25,7 @@ public class WishItemService {
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
     private final EventService eventService;
+    private final NotificationService notificationService;
 
     /**
      * Retourne les souhaits d'une liste.
@@ -58,7 +64,12 @@ public class WishItemService {
                 .imageUrl(request.imageUrl())
                 .build());
 
-        // Le propriétaire voit ses propres items sans info de réservation
+        // Notification broadcast — nouvel item visible par tous les participants
+        notificationService.broadcastEventUpdate(
+                list.getEvent().getId(),
+                new WsEventBroadcast(WsEventType.ITEM_ADDED, list.getEvent().getId(), toResponse(item, true))
+        );
+
         return toResponse(item, true);
     }
 
@@ -70,7 +81,13 @@ public class WishItemService {
     public void deleteItem(Long itemId, Long userId) {
         WishItem item = findItemOrThrow(itemId);
         assertIsListOwner(item.getList(), userId);
+        Long eventId = item.getList().getEvent().getId();
         wishItemRepository.delete(item);
+
+        notificationService.broadcastEventUpdate(
+                eventId,
+                new WsEventBroadcast(WsEventType.ITEM_DELETED, eventId, itemId)
+        );
     }
 
     /**
@@ -102,7 +119,20 @@ public class WishItemService {
 
         // Recharge l'item avec la réservation
         item = findItemOrThrow(itemId);
-        return toResponse(item, false);
+        WishItemResponse response = toResponse(item, false);
+
+        // Notification temps réel — envoyée à tous les participants sauf le propriétaire de la liste
+        notificationService.notifyReservation(item, new WsReservationNotification(
+                WsReservationType.ITEM_RESERVED,
+                item.getId(),
+                item.getName(),
+                item.getList().getId(),
+                item.getList().getEvent().getId(),
+                reserver.getId(),
+                reserver.getName()
+        ));
+
+        return response;
     }
 
     /**
@@ -121,6 +151,18 @@ public class WishItemService {
 
         reservationRepository.delete(reservation);
         item.setReservation(null);
+
+        // Notification annulation — même filtrage propriétaire
+        notificationService.notifyReservation(item, new WsReservationNotification(
+                WsReservationType.ITEM_UNRESERVED,
+                item.getId(),
+                item.getName(),
+                item.getList().getId(),
+                item.getList().getEvent().getId(),
+                null,
+                null
+        ));
+
         return toResponse(item, false);
     }
 
