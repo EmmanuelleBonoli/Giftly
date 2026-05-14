@@ -1,0 +1,36 @@
+services:
+  mysql:
+    image: mysql:8.2
+    container_name: giftly-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: giftly_db
+      MYSQL_USER: giftly
+      MYSQL_PASSWORD: giftly
+    ports:
+      - "3306:3306"
+    volumes:
+      - giftly_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "giftly", "-pgiftly"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: giftly-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: giftly
+      PMA_PASSWORD: giftly
+    ports:
+      - "8090:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  giftly_mysql_data:

@@ -1,0 +1,47 @@
+# ===== SECRETS & ENVIRONNEMENT =====
+.env
+.env.local
+.env.*.local
+*.env
+
+# ===== CLÉS ET CERTIFICATS =====
+*.keystore
+*.jks
+key.properties
+google-services.json
+GoogleService-Info.plist
+*.p12
+*.p8
+*.pem
+
+# ===== JAVA / SPRING BOOT =====
+giftly-api/target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/wrapper/maven-wrapper.jar
+hs_err_pid*
+
+# ===== NODE.JS / EXPO =====
+giftly-app/node_modules/
+giftly-app/.expo/
+giftly-app/dist/
+npm-debug.log*
+
+# ===== INTELLIJ / WEBSTORM =====
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# ===== OS WINDOWS =====
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ===== DIVERS =====
+*.log
+*.tmp
+*.bak
+.DS_Store

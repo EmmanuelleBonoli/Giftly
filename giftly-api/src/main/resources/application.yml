@@ -1,0 +1,70 @@
+spring:
+  application:
+    name: giftly-api
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/giftly_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Paris
+    username: ${DB_USERNAME:giftly}
+    password: ${DB_PASSWORD:giftly}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:}
+            client-secret: ${GOOGLE_CLIENT_SECRET:}
+            scope: openid, profile, email
+            redirect-uri: "{baseUrl}/api/auth/oauth2/callback/{registrationId}"
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+# Configuration JWT
+app:
+  jwt:
+    secret: ${JWT_SECRET:giftly-super-secret-key-change-in-production-min-256-bits}
+    expiration-ms: 86400000        # 24h
+    refresh-expiration-ms: 604800000  # 7 jours
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:8081,exp://localhost:8081}
+  invitation:
+    expiration-hours: 72
+    base-url: ${APP_BASE_URL:http://localhost:8081}
+  freemium:
+    max-active-events: 2
+
+logging:
+  level:
+    com.giftly: DEBUG
+    org.springframework.security: INFO
+    org.springframework.web.socket: INFO
