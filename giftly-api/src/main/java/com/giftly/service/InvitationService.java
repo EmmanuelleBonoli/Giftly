@@ -6,6 +6,9 @@ import com.giftly.dto.invitation.InvitationResponse;
 import com.giftly.dto.invitation.JoinEventResponse;
 import com.giftly.model.*;
 import com.giftly.repository.*;
+import com.giftly.websocket.NotificationService;
+import com.giftly.websocket.dto.WsEventBroadcast;
+import com.giftly.websocket.dto.WsEventBroadcast.WsEventType;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +30,7 @@ public class InvitationService {
     private final UserRepository userRepository;
     private final EventService eventService;
     private final EmailService emailService;
+    private final NotificationService notificationService;
 
     @Value("${app.invitation.expiration-hours}")
     private int expirationHours;
@@ -119,6 +123,14 @@ public class InvitationService {
         invitationRepository.save(invitation);
 
         EventResponse eventResponse = eventService.getById(eventId, userId);
+
+        // Notification broadcast — nouveau participant visible par tous
+        notificationService.broadcastEventUpdate(
+                eventId,
+                new WsEventBroadcast(WsEventType.PARTICIPANT_JOINED, eventId,
+                        java.util.Map.of("userId", user.getId(), "name", user.getName()))
+        );
+
         return new JoinEventResponse(eventResponse, myList.getId());
     }
 
