@@ -30,9 +30,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        // Endpoint natif WebSocket — utilisé par le client React Native
+        registry.addEndpoint("/ws-native")
+                .setAllowedOriginPatterns("*");
+
+        // Endpoint SockJS — fallback pour les navigateurs web
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*")
-                // SockJS comme fallback pour les environnements qui ne supportent pas WebSocket natif
                 .withSockJS();
     }
 }

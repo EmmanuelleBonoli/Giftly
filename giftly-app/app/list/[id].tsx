@@ -9,8 +9,9 @@ import { WishItemCard } from '@/components/WishItemCard';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { AdBanner } from '@/components/AdBanner';
+import { useEventSocket } from '@/hooks/useEventSocket';
+import { useReservationSocket } from '@/hooks/useReservationSocket';
 import type { WishItem, WishList } from '@/types';
-import { getListsByEvent } from '@/services/list-service';
 import api from '@/services/api';
 
 export default function WishListScreen() {
@@ -23,6 +24,42 @@ export default function WishListScreen() {
   const [showAddModal, setShowAddModal] = useState(false);
 
   const isMyList = listOwnerId === user?.id;
+  const [eventId, setEventId] = useState<number>(0);
+
+  // Mises à jour temps réel — item ajouté ou supprimé par le propriétaire
+  useEventSocket({
+    eventId,
+    onItemAdded: (item) => {
+      // On n'ajoute que si l'item appartient à cette liste
+      if (item.listId === Number(id)) {
+        setItems((prev) => {
+          const exists = prev.some((i) => i.id === item.id);
+          return exists ? prev : [...prev, item];
+        });
+      }
+    },
+    onItemDeleted: (itemId) => setItems((prev) => prev.filter((i) => i.id !== itemId)),
+  });
+
+  // Mises à jour temps réel — réservation reçue (jamais envoyée au propriétaire par le serveur)
+  useReservationSocket({
+    onReserved: (payload) => {
+      if (payload.listId !== Number(id)) return;
+      setItems((prev) => prev.map((i) =>
+        i.id === payload.itemId
+          ? { ...i, reserved: true, reservedBy: payload.reservedBy, reservedByName: payload.reservedByName ?? null }
+          : i
+      ));
+    },
+    onUnreserved: (payload) => {
+      if (payload.listId !== Number(id)) return;
+      setItems((prev) => prev.map((i) =>
+        i.id === payload.itemId
+          ? { ...i, reserved: false, reservedBy: null, reservedByName: null }
+          : i
+      ));
+    },
+  });
 
   const loadItems = useCallback(async () => {
     setIsLoading(true);
@@ -35,6 +72,7 @@ export default function WishListScreen() {
       setItems(itemsData);
       setListOwnerId(listData.data.userId);
       setListOwnerName(listData.data.ownerName);
+      setEventId(listData.data.eventId);
     } catch {
       Alert.alert('Erreur', 'Impossible de charger la liste.');
     } finally {

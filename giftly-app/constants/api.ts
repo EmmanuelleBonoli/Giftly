@@ -1,6 +1,8 @@
 /** URL de base de l'API — à surcharger via variable d'environnement */
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:8080/api';
 export const WS_URL = process.env.EXPO_PUBLIC_WS_URL ?? 'http://10.0.2.2:8080/api/ws';
+/** Endpoint WebSocket natif (sans SockJS) — utilisé par le client React Native */
+export const WS_NATIVE_URL = process.env.EXPO_PUBLIC_WS_NATIVE_URL ?? 'ws://10.0.2.2:8080/api/ws-native';
 
 /** Endpoints REST */
 export const Endpoints = {
@@ -36,6 +38,6 @@ export const Endpoints = {
 /** Topics WebSocket STOMP */
 export const WsTopics = {
   eventBroadcast: (eventId: number) => `/topic/event.${eventId}`,
-  eventReservations: (eventId: number) => `/topic/event.${eventId}.reserved`,
+  userReservations: '/user/queue/reservations',
   userNotifications: '/user/queue/notifications',
 } as const;

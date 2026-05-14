@@ -3,19 +3,38 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import * as SecureStore from 'expo-secure-store';
 import { Colors } from '@/constants/colors';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { wsService } from '@/services/websocket-service';
+import { STORAGE_KEYS } from '@/services/api';
 
 /**
- * Layout racine — hydrate le store d'auth au démarrage.
- * Affiche un loader pendant la vérification du token stocké.
+ * Layout racine — hydrate l'auth et gère le cycle de vie de la connexion WebSocket.
+ *
+ * Comportement :
+ * - Connexion WS au login (dès que user passe de null à non-null)
+ * - Déconnexion WS au logout (dès que user repasse à null)
  */
 export default function RootLayout() {
-  const { hydrate, isHydrated } = useAuthStore();
+  const { hydrate, isHydrated, user } = useAuthStore();
 
   useEffect(() => {
     hydrate();
   }, []);
+
+  // Connexion / déconnexion WS selon l'état d'authentification
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    if (user) {
+      SecureStore.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN).then((token) => {
+        if (token) wsService.connect(token);
+      });
+    } else {
+      wsService.disconnect();
+    }
+  }, [user, isHydrated]);
 
   if (!isHydrated) {
     return (
