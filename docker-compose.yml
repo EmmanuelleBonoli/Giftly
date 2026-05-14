@@ -18,19 +18,5 @@ services:
       timeout: 5s
       retries: 5
 
-  phpmyadmin:
-    image: phpmyadmin:latest
-    container_name: giftly-phpmyadmin
-    restart: unless-stopped
-    environment:
-      PMA_HOST: mysql
-      PMA_USER: giftly
-      PMA_PASSWORD: giftly
-    ports:
-      - "8090:80"
-    depends_on:
-      mysql:
-        condition: service_healthy
-
 volumes:
   giftly_mysql_data:
