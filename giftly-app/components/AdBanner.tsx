@@ -1,31 +1,41 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import { Colors } from '@/constants/colors';
 
 /**
- * Bannière publicitaire — placeholder visuel.
- * Sera remplacée par l'intégration AdMob réelle à l'étape 10.
+ * Bannière publicitaire AdMob — affichée en bas de chaque écran principal.
+ *
+ * En développement (__DEV__) : utilise les ID de test Google.
+ * En production : utilise les IDs réels définis dans les variables d'environnement.
+ * À remplacer par tes vrais IDs une fois les comptes AdMob créés.
  */
+const ANDROID_BANNER_ID = process.env.EXPO_PUBLIC_ADMOB_ANDROID_BANNER_ID
+  ?? 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX';
+
+const IOS_BANNER_ID = process.env.EXPO_PUBLIC_ADMOB_IOS_BANNER_ID
+  ?? 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX';
+
+const adUnitId = __DEV__
+  ? TestIds.ADAPTIVE_BANNER
+  : Platform.OS === 'ios' ? IOS_BANNER_ID : ANDROID_BANNER_ID;
+
 export function AdBanner() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Publicité</Text>
+      <BannerAd
+        unitId={adUnitId}
+        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+        requestOptions={{ requestNonPersonalizedAdsOnly: false }}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    height: 50,
     backgroundColor: Colors.adBackground,
     alignItems: 'center',
-    justifyContent: 'center',
     borderTopWidth: 1,
     borderTopColor: Colors.border,
-  },
-  text: {
-    fontSize: 11,
-    color: Colors.textDisabled,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
   },
 });

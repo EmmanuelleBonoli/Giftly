@@ -51,8 +51,11 @@ public class SecurityConfig {
                                 "/auth/login",
                                 "/auth/register",
                                 "/auth/refresh",
+                                "/auth/forgot-password",
+                                "/auth/reset-password",
                                 "/auth/oauth2/**",
-                                "/ws/**"
+                                "/ws/**",
+                                "/ws-native/**"
                         ).permitAll()
                         // Tout le reste nécessite une authentification
                         .anyRequest().authenticated()

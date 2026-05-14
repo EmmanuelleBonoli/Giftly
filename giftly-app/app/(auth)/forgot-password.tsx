@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import api from '@/services/api';
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
@@ -16,10 +17,15 @@ export default function ForgotPasswordScreen() {
       return;
     }
     setLoading(true);
-    // TODO étape future — endpoint /auth/forgot-password à implémenter côté backend
-    await new Promise((r) => setTimeout(r, 800));
-    setLoading(false);
-    setSent(true);
+    try {
+      await api.post('/auth/forgot-password', { email: email.trim() });
+      setSent(true);
+    } catch {
+      // On affiche quand même le message de succès — protection anti-énumération
+      setSent(true);
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (sent) {
